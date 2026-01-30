@@ -38,7 +38,7 @@ const StudentDashboard = ({ studentId }) => {
 
         try {
           const res = await axios.post(
-            "http://localhost:5000/api/attendance/marks", // ✅ correct route
+            "http://localhost:5000/api/qr/marks", // ✅ correct route
             {
               token: decodedText,
               studentId,

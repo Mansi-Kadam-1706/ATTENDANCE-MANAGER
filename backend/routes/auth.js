@@ -77,6 +77,7 @@ router.post("/login", async (req, res) => {
       process.env.JWT_SECRET,
       { expiresIn: "1d" }
     );
+    console.log("Logged in student ID:", user._id);   
 
     res.json({
       msg: "Login successful",

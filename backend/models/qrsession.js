@@ -14,6 +14,6 @@ const qrSessionSchema = new mongoose.Schema ({
     ]
 });
 
-qrSessionSchema.index({expireAt :3},{expireAfterSeconds :0});
+qrSessionSchema.index({expiresAt :1},{expireAfterSeconds :0});
 
 module.exports = mongoose.model("QRSession",qrSessionSchema);

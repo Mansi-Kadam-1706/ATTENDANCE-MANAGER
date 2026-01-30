@@ -4,6 +4,9 @@ console.log("QR routes loaded");
 const router = express.Router();
 const QRSession = require("../models/qrsession");
 const crypto = require("crypto");
+const Attendance = require("../models/Attendance");
+const Classroom = require("../models/Classroom");
+
 
 
 
@@ -32,6 +35,8 @@ router.post("/generate", async (req, res) => {
     });
 
     await qrSession.save();
+    console.log("Generated QR Token:", token);
+
 
     res.status(201).json({
       success: true,
@@ -69,6 +74,11 @@ function calculateDistance(lat1, lon1 , lat2 ,lon2){
 router.post("/marks" , async(req,res)=>{
   const {token ,studentId , latitude,longitude} = req.body;
 
+    console.log("Token received from student:", token);
+
+
+
+
   try{
     //validate QR
     const session = await QRSession.findOne({token});
@@ -103,6 +113,32 @@ router.post("/marks" , async(req,res)=>{
          allowedRadius: classroom.allowedRadius
       });
     }
+
+    // prevent duplicate attendance
+    const today = new Date().toISOString().split("T")[0];
+
+     const alreadyMarked = await Attendance.findOne({
+      studentId,
+      classId: session.classId,
+      date: today
+    });
+
+    if (alreadyMarked) {
+      return res.status(400).json({ msg: "Attendance already marked today" });
+    }
+
+      // 5. Save attendance
+    const now = new Date();
+    const attendance = new Attendance({
+      studentId,
+      classId: session.classId,
+      date: today,
+      time: now.toLocaleTimeString()
+    });
+
+    await attendance.save();
+
+
 
     res.json({msg :"Attendance marked successfully",
       distance:Math.round(distance)
