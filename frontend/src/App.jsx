@@ -6,14 +6,14 @@ import TeacherDashboard from "./pages/TeacherDashboard";
 
 function App() {
   return (
-    <BrowserRouter basename="/ATTENDANCE-MANAGER">
+    <HashRouter basename="/ATTENDANCE-MANAGER">
       <Routes>
         <Route path="/" element={<Login />} />
         <Route path="/signup" element={<Signup />} />
         <Route path="/student" element={<StudentDashboard />} />
         <Route path="/teacher" element={<TeacherDashboard />} />
       </Routes>
-    </BrowserRouter>
+    </HashRouter>
   );
 }
 
