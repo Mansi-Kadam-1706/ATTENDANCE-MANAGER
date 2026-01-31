@@ -4,6 +4,9 @@ import Signup from "./pages/Signup";
 import StudentDashboard from "./pages/StudentDashboard";
 import TeacherDashboard from "./pages/TeacherDashboard";
 
+<h1>APP LOADED</h1>
+
+
 function App() {
   return (
     
