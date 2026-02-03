@@ -23,10 +23,12 @@ const Login = () => {
 
       // Redirect based on role
       if (res.data.user.role === "student") {
-        navigate("/student");
+         window.location.hash = "#/student";
       } else {
-        navigate("/teacher");
-      }
+         window.location.hash = "#/teacher";
+     }
+
+
     } catch (err) {
        console.log(err.response);
       alert(err.response?.data?.msg || "Login failed");
@@ -60,9 +62,10 @@ const Login = () => {
       </form>
 
       <p style={{ marginTop: "16px" }}>
-          Don't have an account?{" "}
-         <Link to="/signup">Signup</Link>
-      </p>
+  Don't have an account?{" "}
+  <a href="#/signup">Signup</a>
+</p>
+
     </div>
   );
 };
