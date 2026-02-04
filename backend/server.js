@@ -5,17 +5,23 @@ require("dotenv").config();
 
 const app = express();
 
-/* ✅ CORS (Railway + GitHub Pages compatible) */
+/* CORS */
 app.use(cors({
   origin: "https://mansi-kadam-1706.github.io",
-  methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
-  allowedHeaders: ["Content-Type", "Authorization"],
   credentials: true
 }));
 
-/* ✅ Handle preflight properly */
-app.options("*", (req, res) => {
-  res.sendStatus(200);
+/* FIXED preflight handling */
+app.use((req, res, next) => {
+  res.header("Access-Control-Allow-Origin", "https://mansi-kadam-1706.github.io");
+  res.header("Access-Control-Allow-Methods", "GET,POST,PUT,DELETE,OPTIONS");
+  res.header("Access-Control-Allow-Headers", "Content-Type, Authorization");
+
+  if (req.method === "OPTIONS") {
+    return res.sendStatus(200);
+  }
+
+  next();
 });
 
 app.use(express.json());
@@ -26,7 +32,7 @@ app.use("/api/classroom", require("./routes/classroom"));
 app.use("/api/qr", require("./routes/qrsession"));
 
 app.get("/", (req, res) => {
-  res.send("running");
+  res.send("Backend running ✅");
 });
 
 /* DB */
@@ -34,8 +40,8 @@ mongoose.connect(process.env.MONGO_URI)
   .then(() => console.log("MongoDB Connected"))
   .catch(err => console.log(err));
 
-/* 🚨 CRITICAL FOR RAILWAY */
-const PORT = process.env.PORT ;
+/* Railway port */
+const PORT = process.env.PORT || 8080;
 app.listen(PORT, "0.0.0.0", () => {
   console.log(`Server running on port ${PORT}`);
 });
