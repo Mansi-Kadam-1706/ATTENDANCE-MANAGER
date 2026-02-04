@@ -5,42 +5,37 @@ require("dotenv").config();
 
 const app = express();
 
+/* ✅ CORS (Railway + GitHub Pages compatible) */
 app.use(cors({
   origin: "https://mansi-kadam-1706.github.io",
   methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
-  allowedHeaders: ["Content-Type", "Authorization"]
+  allowedHeaders: ["Content-Type", "Authorization"],
+  credentials: true
 }));
 
-// VERY IMPORTANT: handle preflight
-app.options("*", cors());
-
+/* ✅ Handle preflight properly */
+app.options("*", (req, res) => {
+  res.sendStatus(200);
+});
 
 app.use(express.json());
 
+/* Routes */
+app.use("/api/auth", require("./routes/auth"));
+app.use("/api/classroom", require("./routes/classroom"));
+app.use("/api/qr", require("./routes/qrsession"));
 
-const authRoutes = require("./routes/auth");
-app.use("/api/auth", authRoutes);
-
-const classroomRoutes = require("./routes/classroom");
-app.use("/api/classroom",classroomRoutes);
-
-const qrSessionRoutes = require("./routes/qrsession");
-app.use("/api/qr", qrSessionRoutes);
-
-
-
-
-app.get("/",(req,res)=>{
-    res.send("running");
+app.get("/", (req, res) => {
+  res.send("running");
 });
 
+/* DB */
 mongoose.connect(process.env.MONGO_URI)
-  .then(() => console.log("MongoDB Connected"))  // success case
-  .catch(err => console.log(err));               // error case
+  .then(() => console.log("MongoDB Connected"))
+  .catch(err => console.log(err));
 
-
-const PORT  = process.env.PORT || 5000;
-app.listen(PORT ,()=>{
-    console.log(`server runing on port ${PORT}`);
+/* 🚨 CRITICAL FOR RAILWAY */
+const PORT = process.env.PORT || 8080;
+app.listen(PORT, "0.0.0.0", () => {
+  console.log(`Server running on port ${PORT}`);
 });
-
