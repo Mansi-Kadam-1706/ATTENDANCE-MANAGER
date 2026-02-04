@@ -9,10 +9,13 @@ const Login = () => {
     e.preventDefault();
 
     try {
-      const res = await axios.post("https://attendance-manager-production-3396.up.railway.app/api/auth/login", {
-        email,
-        password,
-      });
+      const res = await axios.post(
+        "https://attendance-manager.onrender.com/api/auth/login",
+        {
+          email,
+          password,
+        }
+      );
 
       localStorage.setItem("token", res.data.token);
       localStorage.setItem("user", JSON.stringify(res.data.user));
@@ -23,6 +26,7 @@ const Login = () => {
         window.location.hash = "#/teacher";
       }
     } catch (err) {
+      console.error(err);
       alert(err.response?.data?.msg || "Login failed");
     }
   };
@@ -61,3 +65,7 @@ const Login = () => {
 };
 
 export default Login;
+
+
+
+

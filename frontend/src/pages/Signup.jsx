@@ -12,7 +12,7 @@ const Signup = () => {
   const handleSubmit = async (e) => {
     e.preventDefault();
     try {
-      await axios.post("https://attendance-manager-production-3396.up.railway.app/api/auth/signup", {
+      await axios.post("https://attendance-manager.onrender.com/api/auth/signup", {
         name, email, password, role,
       });
       alert("Signup successful. Please login!");
