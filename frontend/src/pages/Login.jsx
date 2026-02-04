@@ -9,7 +9,7 @@ const Login = () => {
     e.preventDefault();
 
     try {
-      const res = await axios.post("http://localhost:5000/api/auth/login", {
+      const res = await axios.post("https://attendance-manager-production-3396.up.railway.app/api/auth/login", {
         email,
         password,
       });
