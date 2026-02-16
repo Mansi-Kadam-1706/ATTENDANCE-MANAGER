@@ -8,7 +8,10 @@ const app = express();
 /* =====================
    MIDDLEWARES
 ===================== */
-app.use(cors());
+app.use(cors({
+   origin: "*", // or your netlify URL
+  credentials: true
+}));
 app.use(express.json());
 
 /* =====================

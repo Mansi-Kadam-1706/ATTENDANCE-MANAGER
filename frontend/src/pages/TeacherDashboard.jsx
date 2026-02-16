@@ -117,7 +117,7 @@ const TeacherPanel = () => {
 
     try {
       const res = await axios.post(
-        "http://localhost:5000/api/attendance/generate",
+        "https://attendance-backend-5m4m.onrender.com/api/attendance/generate",
         {
           teacherId,
           classId,
