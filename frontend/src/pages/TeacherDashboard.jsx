@@ -4,9 +4,10 @@ import axios from "axios";
 import { QRCodeCanvas } from "qrcode.react";
 
 const TeacherPanel = () => {
-  // Get logged-in teacher from localStorage
-  const user = JSON.parse(localStorage.getItem("user"));
-  const teacherId = user?._id;
+  // ✅ Get auth data from localStorage (Option 1)
+  const teacherId = localStorage.getItem("userId");
+  const role = localStorage.getItem("role");
+  const token = localStorage.getItem("token");
 
   const [classes, setClasses] = useState([]);
   const [name, setName] = useState("");
@@ -18,14 +19,30 @@ const TeacherPanel = () => {
   const [expiresAt, setExpiresAt] = useState(null);
   const [activeClassId, setActiveClassId] = useState(null);
 
-  // Fetch all classes of teacher on load
+  // =============================
+  // AUTH GUARD (VERY IMPORTANT)
+  // =============================
   useEffect(() => {
-    if (!teacherId) return;
+    if (!teacherId || role !== "teacher" || !token) {
+      alert("Teacher not logged in");
+    }
+  }, [teacherId, role, token]);
+
+  // =============================
+  // FETCH TEACHER CLASSES
+  // =============================
+  useEffect(() => {
+    if (!teacherId || role !== "teacher") return;
 
     const fetchClasses = async () => {
       try {
         const res = await axios.get(
-          `http://localhost:5000/api/classroom/teacher/${teacherId}`
+          `http://localhost:5000/api/class/teacher/${teacherId}`,
+          {
+            headers: {
+              Authorization: `Bearer ${token}`,
+            },
+          }
         );
         setClasses(res.data);
       } catch (err) {
@@ -34,29 +51,39 @@ const TeacherPanel = () => {
     };
 
     fetchClasses();
-  }, [teacherId]);
+  }, [teacherId, role, token]);
 
-  // Create a new class
+  // =============================
+  // CREATE CLASS
+  // =============================
   const handleCreateClass = async (e) => {
     e.preventDefault();
 
-    if (!user) {
+    if (!teacherId || role !== "teacher") {
       alert("Teacher not logged in");
       return;
     }
 
     try {
-      await axios.post("http://localhost:5000/api/classroom/create", {
-        name,
-        latitude: Number(latitude),
-        longitude: Number(longitude),
-        allowedRadius: Number(allowedRadius),
-        teacherId: user._id,
-      });
+      await axios.post(
+        "http://localhost:5000/api/class/create",
+        {
+          name,
+          latitude: Number(latitude),
+          longitude: Number(longitude),
+          allowedRadius: Number(allowedRadius),
+          teacherId,
+        },
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
 
       alert("Class created successfully");
 
-      // Clear inputs
+      // Clear form
       setName("");
       setLatitude("");
       setLongitude("");
@@ -64,42 +91,62 @@ const TeacherPanel = () => {
 
       // Refresh class list
       const res = await axios.get(
-        `http://localhost:5000/api/classroom/teacher/${teacherId}`
+        `http://localhost:5000/api/classroom/teacher/${teacherId}`,
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
       );
       setClasses(res.data);
+
     } catch (err) {
       console.error("Error creating class:", err);
       alert("Failed to create class");
     }
   };
 
-  // Generate QR for a class
+  // =============================
+  // GENERATE QR CODE
+  // =============================
   const generateQR = async (classId) => {
-    if (!teacherId) {
+    if (!teacherId || role !== "teacher") {
       alert("Teacher not logged in");
       return;
     }
 
     try {
-      const res = await axios.post("http://localhost:5000/api/qr/generate", {
-        teacherId,
-        classId,
-      });
+      const res = await axios.post(
+        "http://localhost:5000/api/attendance/generate",
+        {
+          teacherId,
+          classId,
+        },
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
 
       setQrToken(res.data.token);
       setExpiresAt(res.data.expiresAt);
       setActiveClassId(classId);
+
     } catch (err) {
       console.error("Error generating QR:", err);
       alert("Failed to generate QR");
     }
   };
 
+  // =============================
+  // UI
+  // =============================
   return (
-    <div>
+    <div style={{ padding: "20px" }}>
       <h1>Teacher Panel</h1>
 
-      {/* Create Class Form */}
+      {/* Create Class */}
       <form onSubmit={handleCreateClass}>
         <input
           type="text"
@@ -135,20 +182,24 @@ const TeacherPanel = () => {
           required
         />
 
+        <br />
         <button type="submit">Create Class</button>
       </form>
 
-      {/* List of Classes */}
+      {/* Classes List */}
       <h2>Your Classes</h2>
       <ul>
         {classes.map((cls) => (
           <li key={cls._id} style={{ marginBottom: "20px" }}>
-            <strong>{cls.name}</strong> <br />
+            <strong>{cls.name}</strong>
+            <br />
             Radius: {cls.allowedRadius} meters
             <br />
-            <button onClick={() => generateQR(cls._id)}>Generate QR</button>
 
-            {/* Show QR only for selected class */}
+            <button onClick={() => generateQR(cls._id)}>
+              Generate QR
+            </button>
+
             {activeClassId === cls._id && qrToken && (
               <div style={{ marginTop: "10px" }}>
                 <QRCodeCanvas value={qrToken} size={200} />

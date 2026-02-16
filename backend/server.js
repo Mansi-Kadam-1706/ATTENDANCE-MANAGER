@@ -5,30 +5,42 @@ require("dotenv").config();
 
 const app = express();
 
-/* ✅ CORS for GitHub Pages */
-app.use(cors({
-  origin: "https://mansi-kadam-1706.github.io",
-  methods: ["GET", "POST", "PUT", "DELETE"],
-  allowedHeaders: ["Content-Type", "Authorization"],
-}));
-
+/* =====================
+   MIDDLEWARES
+===================== */
+app.use(cors());
 app.use(express.json());
 
-/* Routes */
+/* =====================
+   ROUTES
+===================== */
 app.use("/api/auth", require("./routes/auth"));
-app.use("/api/classroom", require("./routes/classroom"));
-app.use("/api/qr", require("./routes/qrsession"));
+app.use("/api/class", require("./routes/classroom"));
+app.use("/api/attendance", require("./routes/qrsession"));
+app.use("/api/qrsession", require("./routes/qrsession"));
 
+
+/* =====================
+   HEALTH CHECK
+===================== */
 app.get("/", (req, res) => {
-  res.send("running");
+  res.send("Smart Attendance Backend Running");
 });
 
-/* MongoDB */
-mongoose.connect(process.env.MONGO_URI)
+/* =====================
+   DATABASE
+===================== */
+mongoose
+  .connect(process.env.MONGO_URI)
   .then(() => console.log("MongoDB Connected"))
-  .catch(err => console.error(err));
+  .catch((err) => {
+    console.error("MongoDB Error:", err.message);
+    process.exit(1);
+  });
 
-/* 🚀 IMPORTANT FOR RENDER */
+/* =====================
+   SERVER START
+===================== */
 const PORT = process.env.PORT || 5000;
 app.listen(PORT, () => {
   console.log(`Server running on port ${PORT}`);

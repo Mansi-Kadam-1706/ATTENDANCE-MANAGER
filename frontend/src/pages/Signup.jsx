@@ -1,6 +1,6 @@
 import { useState } from "react";
 import axios from "axios";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, Link } from "react-router-dom";
 
 const Signup = () => {
   const [name, setName] = useState("");
@@ -11,24 +11,31 @@ const Signup = () => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+
     try {
-      await axios.post("https://attendance-manager.onrender.com/api/auth/signup", {
-        name, email, password, role,
+      await axios.post("http://localhost:5000/api/auth/signup", {
+        name,
+        email,
+        password,
+        role,
       });
+
       alert("Signup successful. Please login!");
       navigate("/");
+
     } catch (err) {
       if (err.response) {
-    alert(err.response.data.msg);
-  } else {
-    alert("Backend server is not running!");
-  }
+        alert(err.response.data.msg);
+      } else {
+        alert("Backend server not running");
+      }
     }
   };
 
   return (
-    <div style={{ textAlign: "center", marginTop: "50px" }}>
+    <div style={{ textAlign: "center", marginTop: "60px" }}>
       <h2>Signup</h2>
+
       <form onSubmit={handleSubmit}>
         <input
           type="text"
@@ -36,27 +43,39 @@ const Signup = () => {
           value={name}
           onChange={(e) => setName(e.target.value)}
           required
-        /><br/><br/>
+        />
+        <br /><br />
+
         <input
           type="email"
           placeholder="Email"
           value={email}
           onChange={(e) => setEmail(e.target.value)}
           required
-        /><br/><br/>
+        />
+        <br /><br />
+
         <input
           type="password"
           placeholder="Password"
           value={password}
           onChange={(e) => setPassword(e.target.value)}
           required
-        /><br/><br/>
+        />
+        <br /><br />
+
         <select value={role} onChange={(e) => setRole(e.target.value)}>
           <option value="student">Student</option>
           <option value="teacher">Teacher</option>
-        </select><br/><br/>
+        </select>
+        <br /><br />
+
         <button type="submit">Signup</button>
       </form>
+
+      <p>
+        Already have an account? <Link to="/">Login</Link>
+      </p>
     </div>
   );
 };
