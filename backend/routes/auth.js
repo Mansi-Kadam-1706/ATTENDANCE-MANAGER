@@ -61,6 +61,8 @@ router.post("/signup", async (req, res) => {
 //  LOGIN ROUTE (FINAL FIX)
 // ======================
 router.post("/login", async (req, res) => {
+  console.log("LOGIN HIT", req.body);
+
   const { email, password, role } = req.body;
 
   if (!email || !password || !role) {

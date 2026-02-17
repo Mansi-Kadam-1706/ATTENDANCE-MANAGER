@@ -19,7 +19,7 @@ app.use(express.json());
 ===================== */
 app.use("/api/auth", require("./routes/auth"));
 app.use("/api/class", require("./routes/classroom"));
-app.use("/api/attendance", require("./routes/qrsession"));
+
 app.use("/api/qrsession", require("./routes/qrsession"));
 
 

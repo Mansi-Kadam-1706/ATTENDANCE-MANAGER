@@ -3,8 +3,10 @@ import { useEffect, useState } from "react";
 import axios from "axios";
 import { QRCodeCanvas } from "qrcode.react";
 
+// ✅ CHANGE THIS ONLY
+const BASE_URL = "https://attendance-backend-5m4m.onrender.com";
+
 const TeacherPanel = () => {
-  // ✅ Get auth data from localStorage (Option 1)
   const teacherId = localStorage.getItem("userId");
   const role = localStorage.getItem("role");
   const token = localStorage.getItem("token");
@@ -20,7 +22,7 @@ const TeacherPanel = () => {
   const [activeClassId, setActiveClassId] = useState(null);
 
   // =============================
-  // AUTH GUARD (VERY IMPORTANT)
+  // AUTH GUARD
   // =============================
   useEffect(() => {
     if (!teacherId || role !== "teacher" || !token) {
@@ -29,29 +31,29 @@ const TeacherPanel = () => {
   }, [teacherId, role, token]);
 
   // =============================
-  // FETCH TEACHER CLASSES
+  // FETCH CLASSES
   // =============================
+  const fetchClasses = async () => {
+    try {
+      const res = await axios.get(
+        `${BASE_URL}/api/class/teacher/${teacherId}`,
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
+      setClasses(res.data);
+    } catch (err) {
+      console.error("Error fetching classes:", err);
+    }
+  };
+
   useEffect(() => {
-    if (!teacherId || role !== "teacher") return;
-
-    const fetchClasses = async () => {
-      try {
-        const res = await axios.get(
-          `http://localhost:5000/api/class/teacher/${teacherId}`,
-          {
-            headers: {
-              Authorization: `Bearer ${token}`,
-            },
-          }
-        );
-        setClasses(res.data);
-      } catch (err) {
-        console.error("Error fetching classes:", err);
-      }
-    };
-
-    fetchClasses();
-  }, [teacherId, role, token]);
+    if (teacherId && role === "teacher") {
+      fetchClasses();
+    }
+  }, [teacherId, role]);
 
   // =============================
   // CREATE CLASS
@@ -59,14 +61,9 @@ const TeacherPanel = () => {
   const handleCreateClass = async (e) => {
     e.preventDefault();
 
-    if (!teacherId || role !== "teacher") {
-      alert("Teacher not logged in");
-      return;
-    }
-
     try {
       await axios.post(
-        "http://localhost:5000/api/class/create",
+        `${BASE_URL}/api/class/create`,
         {
           name,
           latitude: Number(latitude),
@@ -83,23 +80,12 @@ const TeacherPanel = () => {
 
       alert("Class created successfully");
 
-      // Clear form
       setName("");
       setLatitude("");
       setLongitude("");
       setAllowedRadius("");
 
-      // Refresh class list
-      const res = await axios.get(
-        `http://localhost:5000/api/classroom/teacher/${teacherId}`,
-        {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        }
-      );
-      setClasses(res.data);
-
+      fetchClasses();
     } catch (err) {
       console.error("Error creating class:", err);
       alert("Failed to create class");
@@ -107,17 +93,12 @@ const TeacherPanel = () => {
   };
 
   // =============================
-  // GENERATE QR CODE
+  // GENERATE QR
   // =============================
   const generateQR = async (classId) => {
-    if (!teacherId || role !== "teacher") {
-      alert("Teacher not logged in");
-      return;
-    }
-
     try {
       const res = await axios.post(
-        "https://attendance-backend-5m4m.onrender.com/api/attendance/generate",
+        `${BASE_URL}/api/qrsession/generate`,
         {
           teacherId,
           classId,
@@ -132,9 +113,8 @@ const TeacherPanel = () => {
       setQrToken(res.data.token);
       setExpiresAt(res.data.expiresAt);
       setActiveClassId(classId);
-
     } catch (err) {
-      console.error("Error generating QR:", err);
+      console.error("Error generating QR:", err.response?.data || err.message);
       alert("Failed to generate QR");
     }
   };
@@ -146,7 +126,7 @@ const TeacherPanel = () => {
     <div style={{ padding: "20px" }}>
       <h1>Teacher Panel</h1>
 
-      {/* Create Class */}
+      {/* CREATE CLASS */}
       <form onSubmit={handleCreateClass}>
         <input
           type="text"
@@ -186,7 +166,7 @@ const TeacherPanel = () => {
         <button type="submit">Create Class</button>
       </form>
 
-      {/* Classes List */}
+      {/* CLASS LIST */}
       <h2>Your Classes</h2>
       <ul>
         {classes.map((cls) => (
