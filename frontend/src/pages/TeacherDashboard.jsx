@@ -3,15 +3,23 @@ import { useEffect, useState } from "react";
 import axios from "axios";
 import { QRCodeCanvas } from "qrcode.react";
 
-// ✅ CHANGE THIS ONLY
-const BASE_URL = "https://attendance-backend-5m4m.onrender.com";
+const BACKEND_URL = "https://attendance-backend-5m4m.onrender.com";
 
 const TeacherPanel = () => {
-  const teacherId = localStorage.getItem("userId");
-  const role = localStorage.getItem("role");
+  // =============================
+  // AUTH DATA (✅ FIXED)
+  // =============================
+  const user = JSON.parse(localStorage.getItem("user"));
   const token = localStorage.getItem("token");
 
+  const teacherId = user?.id;
+  const role = user?.role;
+
+  // =============================
+  // STATE
+  // =============================
   const [classes, setClasses] = useState([]);
+
   const [name, setName] = useState("");
   const [latitude, setLatitude] = useState("");
   const [longitude, setLongitude] = useState("");
@@ -25,35 +33,35 @@ const TeacherPanel = () => {
   // AUTH GUARD
   // =============================
   useEffect(() => {
-    if (!teacherId || role !== "teacher" || !token) {
+    if (!token || role !== "teacher") {
       alert("Teacher not logged in");
     }
-  }, [teacherId, role, token]);
+  }, [token, role]);
 
   // =============================
   // FETCH CLASSES
   // =============================
-  const fetchClasses = async () => {
-    try {
-      const res = await axios.get(
-        `${BASE_URL}/api/class/teacher/${teacherId}`,
-        {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        }
-      );
-      setClasses(res.data);
-    } catch (err) {
-      console.error("Error fetching classes:", err);
-    }
-  };
-
   useEffect(() => {
-    if (teacherId && role === "teacher") {
-      fetchClasses();
-    }
-  }, [teacherId, role]);
+    if (!teacherId || role !== "teacher") return;
+
+    const fetchClasses = async () => {
+      try {
+        const res = await axios.get(
+          `${BACKEND_URL}/api/class/teacher/${teacherId}`,
+          {
+            headers: {
+              Authorization: `Bearer ${token}`,
+            },
+          }
+        );
+        setClasses(res.data);
+      } catch (err) {
+        console.error("Fetch classes error:", err);
+      }
+    };
+
+    fetchClasses();
+  }, [teacherId, role, token]);
 
   // =============================
   // CREATE CLASS
@@ -63,7 +71,7 @@ const TeacherPanel = () => {
 
     try {
       await axios.post(
-        `${BASE_URL}/api/class/create`,
+        `${BACKEND_URL}/api/class/create`,
         {
           name,
           latitude: Number(latitude),
@@ -85,9 +93,18 @@ const TeacherPanel = () => {
       setLongitude("");
       setAllowedRadius("");
 
-      fetchClasses();
+      // refresh classes
+      const res = await axios.get(
+        `${BACKEND_URL}/api/class/teacher/${teacherId}`,
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
+      setClasses(res.data);
     } catch (err) {
-      console.error("Error creating class:", err);
+      console.error("Create class error:", err);
       alert("Failed to create class");
     }
   };
@@ -98,7 +115,7 @@ const TeacherPanel = () => {
   const generateQR = async (classId) => {
     try {
       const res = await axios.post(
-        `${BASE_URL}/api/qrsession/generate`,
+        `${BACKEND_URL}/api/qrsession/generate`,
         {
           teacherId,
           classId,
@@ -114,7 +131,7 @@ const TeacherPanel = () => {
       setExpiresAt(res.data.expiresAt);
       setActiveClassId(classId);
     } catch (err) {
-      console.error("Error generating QR:", err.response?.data || err.message);
+      console.error("QR error:", err);
       alert("Failed to generate QR");
     }
   };
@@ -129,39 +146,29 @@ const TeacherPanel = () => {
       {/* CREATE CLASS */}
       <form onSubmit={handleCreateClass}>
         <input
-          type="text"
           placeholder="Class Name"
           value={name}
           onChange={(e) => setName(e.target.value)}
           required
         />
-
         <input
-          type="number"
-          step="any"
           placeholder="Latitude"
           value={latitude}
           onChange={(e) => setLatitude(e.target.value)}
           required
         />
-
         <input
-          type="number"
-          step="any"
           placeholder="Longitude"
           value={longitude}
           onChange={(e) => setLongitude(e.target.value)}
           required
         />
-
         <input
-          type="number"
           placeholder="Allowed Radius (meters)"
           value={allowedRadius}
           onChange={(e) => setAllowedRadius(e.target.value)}
           required
         />
-
         <br />
         <button type="submit">Create Class</button>
       </form>
@@ -171,7 +178,7 @@ const TeacherPanel = () => {
       <ul>
         {classes.map((cls) => (
           <li key={cls._id} style={{ marginBottom: "20px" }}>
-            <strong>{cls.name}</strong>
+            <b>{cls.name}</b>
             <br />
             Radius: {cls.allowedRadius} meters
             <br />
@@ -185,9 +192,7 @@ const TeacherPanel = () => {
                 <QRCodeCanvas value={qrToken} size={200} />
                 <p>
                   Expires at:{" "}
-                  {expiresAt
-                    ? new Date(expiresAt).toLocaleTimeString()
-                    : ""}
+                  {new Date(expiresAt).toLocaleTimeString()}
                 </p>
               </div>
             )}
