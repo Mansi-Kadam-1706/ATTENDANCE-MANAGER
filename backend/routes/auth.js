@@ -58,10 +58,7 @@ router.post("/signup", async (req, res) => {
 });
 
 // ======================
-//  LOGIN ROUTE
-// ======================
-// ======================
-//  LOGIN ROUTE
+//  LOGIN ROUTE (FINAL FIX)
 // ======================
 router.post("/login", async (req, res) => {
   const { email, password, role } = req.body;
@@ -71,38 +68,49 @@ router.post("/login", async (req, res) => {
   }
 
   try {
-    // 🔥 SINGLE USER MODEL (CORRECT)
-    const user = await User.findOne({ email, role });
+    // 1️⃣ Find user by email ONLY
+    const user = await User.findOne({ email });
 
     if (!user) {
       return res.status(400).json({ msg: "User not found" });
     }
 
+    // 2️⃣ Check role
+    if (user.role !== role) {
+      return res.status(400).json({ msg: "Invalid role selected" });
+    }
+
+    // 3️⃣ Check password
     const isMatch = await bcrypt.compare(password, user.password);
     if (!isMatch) {
       return res.status(400).json({ msg: "Invalid credentials" });
     }
 
-    console.log(`Logged in ${role} ID:`, user._id);
-
+    // 4️⃣ Generate token
     const token = jwt.sign(
       { id: user._id, role: user.role },
       process.env.JWT_SECRET,
       { expiresIn: "1d" }
     );
 
+    // 5️⃣ Success response
     res.json({
       token,
       user: {
         id: user._id,
-        role: user.role
-      }
+        name: user.name,
+        email: user.email,
+        role: user.role,
+      },
     });
 
   } catch (err) {
-    res.status(500).json({ msg: err.message });
+    console.error("Login error:", err);
+    res.status(500).json({ msg: "Server error" });
   }
 });
+
+
 
 
 module.exports = router;
