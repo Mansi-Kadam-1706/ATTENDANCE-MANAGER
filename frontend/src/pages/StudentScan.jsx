@@ -1,66 +1,66 @@
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import axios from "axios";
 
 const BACKEND_URL = "https://attendance-backend-5m4m.onrender.com";
 
 const StudentScan = () => {
-  const { token } = useParams();
+  const { token } = useParams(); // QR token from URL
   const navigate = useNavigate();
+  const [message, setMessage] = useState("Scanning QR...");
 
   useEffect(() => {
     if (!token) {
-      alert("Invalid QR");
+      setMessage("❌ Invalid QR code");
       return;
     }
 
-    const markAttendance = async () => {
-      try {
-        navigator.geolocation.getCurrentPosition(
-          async (position) => {
-            const { latitude, longitude } = position.coords;
+    const user = JSON.parse(localStorage.getItem("user"));
+    const authToken = localStorage.getItem("token");
 
-            const userToken = localStorage.getItem("token");
+    if (!user || user.role !== "student") {
+      setMessage("❌ Please login as student");
+      setTimeout(() => navigate("/login"), 2000);
+      return;
+    }
 
-            if (!userToken) {
-              alert("Please login first");
-              navigate("/login");
-              return;
-            }
-
-            await axios.post(
-              `${BACKEND_URL}/api/attendance/mark`,
-              {
-                qrToken: token,
-                latitude,
-                longitude,
+    navigator.geolocation.getCurrentPosition(
+      async (position) => {
+        try {
+          const res = await axios.post(
+            `${BACKEND_URL}/api/qrsession/mark`,
+            {
+              token,                    // ✅ correct key
+              studentId: user.id,       // ✅ REQUIRED
+              latitude: position.coords.latitude,
+              longitude: position.coords.longitude,
+            },
+            {
+              headers: {
+                Authorization: `Bearer ${authToken}`,
               },
-              {
-                headers: {
-                  Authorization: `Bearer ${userToken}`,
-                },
-              }
-            );
+            }
+          );
 
-            alert("✅ Attendance marked successfully");
-            navigate("/student");
-          },
-          () => {
-            alert("Location permission denied");
-          }
-        );
-      } catch (err) {
-        alert(err.response?.data?.message || "Attendance failed");
+          setMessage("✅ Attendance marked successfully");
+          setTimeout(() => navigate("/student"), 2000);
+
+        } catch (err) {
+          setMessage(
+            err.response?.data?.message || "❌ Attendance failed"
+          );
+        }
+      },
+      () => {
+        setMessage("❌ Location permission required");
       }
-    };
-
-    markAttendance();
+    );
   }, [token, navigate]);
 
   return (
-    <div style={{ padding: 20 }}>
-      <h2>Scanning QR...</h2>
-      <p>Please allow location access</p>
+    <div style={{ padding: 20, textAlign: "center" }}>
+      <h2>Student Attendance</h2>
+      <p>{message}</p>
     </div>
   );
 };

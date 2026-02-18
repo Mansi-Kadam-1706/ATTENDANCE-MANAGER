@@ -109,9 +109,8 @@ const TeacherPanel = () => {
             {activeClassId === cls._id && qrToken && (
               <div style={{ marginTop: 10 }}>
                 <QRCodeCanvas
-                  value={`${FRONTEND_URL}/scan/${qrToken}`}
-                  size={220}
-                />
+                value={`https://effervescent-peony-d1067a.netlify.app/scan/${qrToken}`}
+  size={220} />
                 <p>Expires at: {new Date(expiresAt).toLocaleTimeString()}</p>
               </div>
             )}
