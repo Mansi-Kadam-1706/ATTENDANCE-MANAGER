@@ -1,13 +1,16 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import axios from "axios";
-import { Html5QrcodeScanner } from "html5-qrcode";
+import { BrowserQRCodeReader } from "@zxing/browser";
 
 const StudentDashboard = ({ studentId }) => {
+  const videoRef = useRef(null);
+  const qrReaderRef = useRef(null);
+
   const [location, setLocation] = useState(null);
   const [message, setMessage] = useState("");
   const [scannerStarted, setScannerStarted] = useState(false);
 
-  // Get GPS location
+  // 📍 Get GPS location
   const getLocation = () => {
     navigator.geolocation.getCurrentPosition(
       (pos) => {
@@ -17,60 +20,71 @@ const StudentDashboard = ({ studentId }) => {
         });
         setScannerStarted(true);
       },
-      () => {
-        alert("Please allow location access");
-      }
+      () => alert("Please allow location access"),
+      { enableHighAccuracy: true }
     );
   };
 
+  // 📷 Start ZXing Scanner
   useEffect(() => {
     if (!scannerStarted || !location) return;
 
-    const scanner = new Html5QrcodeScanner(
-      "reader",
-      { fps: 10, qrbox: 250 },
-      false
-    );
+    qrReaderRef.current = new BrowserQRCodeReader();
 
-    scanner.render(
-      async (decodedText) => {
-        scanner.clear(); // stop scanning after success
+    qrReaderRef.current
+      .decodeFromVideoDevice(
+        null,
+        videoRef.current,
+        async (result, err) => {
+          if (result) {
+            const token = result.getText();
 
-        try {
-          const res = await axios.post(
-            "https://attendance-backend-5m4m.onrender.com/api/qr/marks", // ✅ correct route
-            {
-              token: decodedText,
-              studentId,
-              latitude: location.latitude,
-              longitude: location.longitude,
+            qrReaderRef.current.reset(); // stop camera
+
+            try {
+              const res = await axios.post(
+                "https://attendance-backend-5m4m.onrender.com/api/qrsession/mark",
+                {
+                  token,
+                  studentId,
+                  latitude: location.latitude,
+                  longitude: location.longitude,
+                }
+              );
+
+              setMessage(res.data.msg || "Attendance marked ✅");
+            } catch (error) {
+              setMessage(
+                error.response?.data?.msg || "Attendance failed ❌"
+              );
             }
-          );
-
-          setMessage(res.data.msg);
-        } catch (err) {
-          setMessage(err.response?.data?.msg || "Attendance failed");
+          }
         }
-      },
-      (error) => {
-        // ignore scan errors
-      }
-    );
+      );
 
     return () => {
-      scanner.clear().catch(() => {});
+      qrReaderRef.current?.reset();
     };
   }, [scannerStarted, location, studentId]);
 
   return (
-    <div>
+    <div style={{ textAlign: "center" }}>
       <h1>Student Panel</h1>
 
-      <button onClick={getLocation}>Get My Location</button>
+      {!scannerStarted && (
+        <button onClick={getLocation}>
+          Get My Location
+        </button>
+      )}
 
-      {scannerStarted && <div id="reader" style={{ width: "300px" }}></div>}
+      {scannerStarted && (
+        <video
+          ref={videoRef}
+          style={{ width: "300px", marginTop: "20px" }}
+        />
+      )}
 
-      <p>{message}</p>
+      {message && <p>{message}</p>}
     </div>
   );
 };
