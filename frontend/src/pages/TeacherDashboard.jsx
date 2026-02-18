@@ -4,7 +4,7 @@ import axios from "axios";
 import { QRCodeCanvas } from "qrcode.react";
 
 const BACKEND_URL = "https://attendance-backend-5m4m.onrender.com";
-const FRONTEND_URL = "https://your-frontend.netlify.app"; // 🔴 change this
+const FRONTEND_URL = "https://papaya-arithmetic-4a1e26.netlify.app";
 
 const TeacherPanel = () => {
   const user = JSON.parse(localStorage.getItem("user"));
