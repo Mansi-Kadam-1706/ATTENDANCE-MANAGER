@@ -43,7 +43,11 @@ router.post("/mark", async (req, res) => {
   const distance = R * (2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a)));
 
   if (distance > classroom.allowedRadius)
-    return res.status(403).json({ message: "Outside allowed radius" });
+    return res.status(403).json({
+    message: "Outside allowed radius",
+    distance: Math.round(distance),
+    allowedRadius: classroom.allowedRadius,
+  });
 
   const today = new Date().toISOString().split("T")[0];
 

@@ -5,6 +5,7 @@ import { QRCodeCanvas } from "qrcode.react";
 
 const BACKEND_URL = "https://attendance-backend-5m4m.onrender.com";
 const FRONTEND_URL = "https://effervescent-peony-d1067a.netlify.app";
+
 const TeacherPanel = () => {
   const user = JSON.parse(localStorage.getItem("user"));
   const token = localStorage.getItem("token");
@@ -41,6 +42,21 @@ const TeacherPanel = () => {
 
     fetchClasses();
   }, [teacherId, token]);
+
+  /* ===========================
+     ✅ NEW FUNCTION (IMPORTANT)
+  ============================ */
+  const getCurrentLocation = () => {
+    navigator.geolocation.getCurrentPosition(
+      (position) => {
+        setLatitude(position.coords.latitude);
+        setLongitude(position.coords.longitude);
+      },
+      () => {
+        alert("Please allow location access");
+      }
+    );
+  };
 
   const handleCreateClass = async (e) => {
     e.preventDefault();
@@ -88,30 +104,63 @@ const TeacherPanel = () => {
       <h1>Teacher Panel</h1>
 
       <form onSubmit={handleCreateClass}>
-        <input placeholder="Class Name" value={name} onChange={e => setName(e.target.value)} required />
-        <input placeholder="Latitude" value={latitude} onChange={e => setLatitude(e.target.value)} required />
-        <input placeholder="Longitude" value={longitude} onChange={e => setLongitude(e.target.value)} required />
-        <input placeholder="Allowed Radius (meters)" value={allowedRadius} onChange={e => setAllowedRadius(e.target.value)} required />
+        <input
+          placeholder="Class Name"
+          value={name}
+          onChange={(e) => setName(e.target.value)}
+          required
+        />
+
+        <input
+          placeholder="Latitude"
+          value={latitude}
+          readOnly
+        />
+
+        <input
+          placeholder="Longitude"
+          value={longitude}
+          readOnly
+        />
+
+        {/* ✅ NEW BUTTON */}
+        <button type="button" onClick={getCurrentLocation}>
+          📍 Use Current Location
+        </button>
+
+        <input
+          placeholder="Allowed Radius (meters)"
+          value={allowedRadius}
+          onChange={(e) => setAllowedRadius(e.target.value)}
+          required
+        />
+
         <br />
         <button type="submit">Create Class</button>
       </form>
 
       <h2>Your Classes</h2>
       <ul>
-        {classes.map(cls => (
+        {classes.map((cls) => (
           <li key={cls._id} style={{ marginBottom: 20 }}>
             <b>{cls.name}</b>
             <br />
             Radius: {cls.allowedRadius} meters
             <br />
-            <button onClick={() => generateQR(cls._id)}>Generate QR</button>
+            <button onClick={() => generateQR(cls._id)}>
+              Generate QR
+            </button>
 
             {activeClassId === cls._id && qrToken && (
               <div style={{ marginTop: 10 }}>
                 <QRCodeCanvas
-                value={`https://effervescent-peony-d1067a.netlify.app/scan/${qrToken}`}
-  size={220} />
-                <p>Expires at: {new Date(expiresAt).toLocaleTimeString()}</p>
+                  value={`${FRONTEND_URL}/scan/${qrToken}`}
+                  size={220}
+                />
+                <p>
+                  Expires at:{" "}
+                  {new Date(expiresAt).toLocaleTimeString()}
+                </p>
               </div>
             )}
           </li>
