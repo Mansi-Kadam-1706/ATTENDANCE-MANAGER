@@ -1,0 +1,53 @@
+body{
+    font-family: Arial, sans-serif;
+    background: linear-gradient(135deg,#667eea,#764ba2);
+}
+
+/* Center page */
+.login-container{
+    display:flex;
+    justify-content:center;
+    align-items:center;
+    height:100vh;
+}
+
+/* Login box */
+.login-box{
+    background:white;
+    padding:40px;
+    border-radius:10px;
+    width:320px;
+    box-shadow:0 10px 25px rgba(0,0,0,0.2);
+    text-align:center;
+}
+
+/* Heading */
+.login-box h2{
+    margin-bottom:20px;
+}
+
+/* Input fields */
+.login-box input{
+    width:100%;
+    padding:10px;
+    margin:10px 0;
+    border:1px solid #ccc;
+    border-radius:5px;
+}
+
+/* Button */
+.login-box button{
+    width:100%;
+    padding:10px;
+    border:none;
+    background:#667eea;
+    color:white;
+    font-size:16px;
+    border-radius:5px;
+    cursor:pointer;
+}
+
+/* Hover effect */
+.login-box button:hover{
+    background:#5563d1;
+}
