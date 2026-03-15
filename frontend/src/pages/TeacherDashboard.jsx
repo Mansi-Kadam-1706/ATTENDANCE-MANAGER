@@ -23,6 +23,11 @@ const TeacherPanel = () => {
   const [expiresAt, setExpiresAt] = useState(null);
   const [activeClassId, setActiveClassId] = useState(null);
 
+  /* ✅ DASHBOARD STATES */
+  const [totalStudents, setTotalStudents] = useState(0);
+  const [present, setPresent] = useState(0);
+  const [absent, setAbsent] = useState(0);
+
   useEffect(() => {
     if (!token || role !== "teacher") {
       alert("Teacher not logged in");
@@ -44,7 +49,7 @@ const TeacherPanel = () => {
   }, [teacherId, token]);
 
   /* ===========================
-     ✅ NEW FUNCTION (IMPORTANT)
+     GET CURRENT LOCATION
   ============================ */
   const getCurrentLocation = () => {
     navigator.geolocation.getCurrentPosition(
@@ -58,6 +63,9 @@ const TeacherPanel = () => {
     );
   };
 
+  /* ===========================
+     CREATE CLASS
+  ============================ */
   const handleCreateClass = async (e) => {
     e.preventDefault();
 
@@ -87,6 +95,28 @@ const TeacherPanel = () => {
     setClasses(res.data);
   };
 
+  /* ===========================
+     FETCH DASHBOARD DATA
+  ============================ */
+  const fetchDashboard = async (classId) => {
+    try {
+      const res = await axios.get(
+        `${BACKEND_URL}/api/dashboard/teacher/${classId}`,
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
+
+      setTotalStudents(res.data.totalStudents);
+      setPresent(res.data.present);
+      setAbsent(res.data.absent);
+
+    } catch (err) {
+      console.log("Dashboard error", err);
+    }
+  };
+
+  /* ===========================
+     GENERATE QR
+  ============================ */
   const generateQR = async (classId) => {
     const res = await axios.post(
       `${BACKEND_URL}/api/qrsession/generate`,
@@ -97,12 +127,16 @@ const TeacherPanel = () => {
     setQrToken(res.data.token);
     setExpiresAt(res.data.expiresAt);
     setActiveClassId(classId);
+
+    /* ✅ CALL DASHBOARD */
+    fetchDashboard(classId);
   };
 
   return (
     <div style={{ padding: 20 }}>
       <h1>Teacher Panel</h1>
 
+      {/* CREATE CLASS */}
       <form onSubmit={handleCreateClass}>
         <input
           placeholder="Class Name"
@@ -123,7 +157,6 @@ const TeacherPanel = () => {
           readOnly
         />
 
-        {/* ✅ NEW BUTTON */}
         <button type="button" onClick={getCurrentLocation}>
           📍 Use Current Location
         </button>
@@ -140,6 +173,7 @@ const TeacherPanel = () => {
       </form>
 
       <h2>Your Classes</h2>
+
       <ul>
         {classes.map((cls) => (
           <li key={cls._id} style={{ marginBottom: 20 }}>
@@ -147,20 +181,44 @@ const TeacherPanel = () => {
             <br />
             Radius: {cls.allowedRadius} meters
             <br />
+
             <button onClick={() => generateQR(cls._id)}>
               Generate QR
             </button>
 
             {activeClassId === cls._id && qrToken && (
               <div style={{ marginTop: 10 }}>
+
+                {/* QR CODE */}
                 <QRCodeCanvas
                   value={`${FRONTEND_URL}/scan/${qrToken}`}
                   size={220}
                 />
+
                 <p>
                   Expires at:{" "}
                   {new Date(expiresAt).toLocaleTimeString()}
                 </p>
+
+                {/* DASHBOARD */}
+                <div style={{ marginTop: 20 }}>
+                  <h3>Attendance Dashboard</h3>
+
+                  <p>Total Students: {totalStudents}</p>
+                  <p>Present: {present}</p>
+                  <p>Absent: {absent}</p>
+
+                  <button
+                    onClick={() =>
+                      window.open(
+                        `${BACKEND_URL}/api/dashboard/export/${cls._id}`
+                      )
+                    }
+                  >
+                    Export CSV
+                  </button>
+                </div>
+
               </div>
             )}
           </li>

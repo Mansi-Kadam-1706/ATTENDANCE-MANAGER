@@ -1,53 +1,30 @@
-body{
-    font-family: Arial, sans-serif;
-    background: linear-gradient(135deg,#667eea,#764ba2);
-}
-
-/* Center page */
 .login-container{
-    display:flex;
-    justify-content:center;
-    align-items:center;
-    height:100vh;
+    width:300px;
+    margin:100px auto;
+    border:1px solid black;
+    padding:20px;
 }
 
-/* Login box */
-.login-box{
-    background:white;
-    padding:40px;
-    border-radius:10px;
-    width:320px;
-    box-shadow:0 10px 25px rgba(0,0,0,0.2);
+h2{
     text-align:center;
 }
 
-/* Heading */
-.login-box h2{
-    margin-bottom:20px;
+label{
+    display:block;
+    margin-top:10px;
 }
 
-/* Input fields */
-.login-box input{
+input{
     width:100%;
-    padding:10px;
-    margin:10px 0;
-    border:1px solid #ccc;
-    border-radius:5px;
+    padding:5px;
+    margin-top:5px;
 }
 
-/* Button */
-.login-box button{
+button{
     width:100%;
-    padding:10px;
-    border:none;
-    background:#667eea;
+    margin-top:15px;
+    padding:8px;
+    background-color:blue;
     color:white;
-    font-size:16px;
-    border-radius:5px;
-    cursor:pointer;
-}
-
-/* Hover effect */
-.login-box button:hover{
-    background:#5563d1;
+    border:none;
 }

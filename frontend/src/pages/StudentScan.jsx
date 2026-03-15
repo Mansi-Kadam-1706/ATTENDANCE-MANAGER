@@ -12,7 +12,7 @@ const StudentScan = () => {
   useEffect(() => {
     if (!token) {
       setMessage("❌ Invalid QR code");
-      return;
+      return;6
     }
 
     const user = JSON.parse(localStorage.getItem("user"));
